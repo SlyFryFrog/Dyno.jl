@@ -1,0 +1,4 @@
+name = "Dyno"
+uuid = "93ca4c37-c778-49d8-846f-ccaa1bc7ed04"
+authors = ["Marcus Gigandet <78104059+SlyFryFrog@users.noreply.github.com>"]
+version = "0.1.0"
