@@ -2,6 +2,7 @@
 
 Dyno.jl is the Julia-side companion to the Dyno C++ library, designed to facilitate seamless integration between Julia and C++. It provides the modules, utilities, and registration mechanisms necessary to expose Julia functions to a C++ host application, supporting both runtime (REPL) and ahead-of-time (AOT) compiled workflows.
 
+
 **Note:** Due to the way Dyno registers functions, it is not possible to pass the `--trim=safe` option when using AOT compilation. This may be changed in the future.
 
 ## Overview
