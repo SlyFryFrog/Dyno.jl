@@ -1,9 +1,7 @@
 # Dyno.jl
 
-Dyno.jl is the Julia-side companion to the Dyno C++ library, designed to facilitate seamless integration between Julia and C++. It provides the modules, utilities, and registration mechanisms necessary to expose Julia functions to a C++ host application, supporting both runtime (REPL) and ahead-of-time (AOT) compiled workflows.
+Dyno.jl is the Julia-side companion to the Dyno C++ library, designed to facilitate seamless integration between Julia and C++. It provides the modules, utilities, and registration mechanisms necessary to expose Julia functions to a C++ host application, supporting both runtime (REPL) and ahead-of-time (AOT) compiled workflows. Additionally, using the `--trim=safe` flag is supported.
 
-
-**Note:** Due to the way Dyno registers functions, it is not possible to pass the `--trim=safe` option when using AOT compilation. This may be changed in the future.
 
 ## Overview
 
@@ -47,27 +45,47 @@ using Dyno
 Inside of your Julia modules, use the `Dyno.@register` macro to register functions:
 
 ```julia
-module GameA
 using Dyno
 
+module GameA
+
 function _process(delta::Float64)
-    println("GameA processing: ", delta)
+    println(Core.stdout, "GameA processing: ", delta)
 end
 
-Dyno.@register GameA _process
+function my_func(arg1::Int32, arg2::Int32, arg3::Float64)
+    println(Core.stdout, "Args: ", arg1, " ", arg2, " ", arg3)
 end
+
+Dyno.@register GameA _process   # jl_GameA__process
+Dyno.@register GameA my_func    # jl_GameA_my_func
 ```
 
 Adding a second function named _process in another module is allowed:
 
 ```julia
-module GameB
 using Dyno
+
+module GameB
 
 function _process(delta::Float64)
     println("GameB processing: ", delta)
 end
 
-Dyno.@register GameB _process
 end
+
+Dyno.@register GameB _process   # jl_GameB__process
 ```
+
+To then generate the `@ccallable` wrapper functions, include all the files with registered types and then call `Dyno.generate_wrapper`:
+
+```
+using Dyno
+
+include("gamea.jl")
+include("gameb.jl")
+
+Dyno.generate_wrappers()    # Or pass true to enable verbose logging
+```
+
+The generated `@ccallable` functions accept two parameters: a `void*` pointer and an `int`. When calling these functions from C++, you bundle all arguments into a single memory block referenced by the `void*`, and the accompanying `int` indicates how many arguments were packed.
